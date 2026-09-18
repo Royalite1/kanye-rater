@@ -4,9 +4,6 @@ import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { clampRating, formatRating, ratingColorClass } from "../lib/ratingUtils";
 
-// Lets the logged-in user set/update their own rating (0.0 - 10.0) for a song.
-// Calls onSaved(newValue) after a successful upsert so parent lists can
-// refresh their local mean without a full refetch.
 export default function RatingInput({ userId, songId, initialValue, onSaved }) {
   const [value, setValue] = useState(
     initialValue === null || initialValue === undefined ? "" : String(initialValue)
@@ -15,6 +12,8 @@ export default function RatingInput({ userId, songId, initialValue, onSaved }) {
   const [error, setError] = useState(null);
 
   async function save(nextRaw) {
+    if (nextRaw === "" || nextRaw === null) return;
+    
     const clamped = clampRating(nextRaw);
     if (clamped === null) {
       setError("Enter a number between 0.0 and 10.0");
@@ -67,7 +66,7 @@ export default function RatingInput({ userId, songId, initialValue, onSaved }) {
         onKeyDown={(e) => {
           if (e.key === "Enter") save(value);
         }}
-        className="input w-20 text-center"
+        className="w-20 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-center font-semibold text-white focus:border-yellow-500 focus:outline-none disabled:opacity-50"
         disabled={saving}
       />
       <input
@@ -76,11 +75,10 @@ export default function RatingInput({ userId, songId, initialValue, onSaved }) {
         max="10"
         step="0.1"
         value={value === "" ? 0 : value}
-        onChange={(e) => {
-          setValue(e.target.value);
-          save(e.target.value);
-        }}
-        className="w-24 accent-accent"
+        onChange={(e) => setValue(e.target.value)}
+        onMouseUp={() => save(value)}
+        onTouchEnd={() => save(value)}
+        className="w-24 accent-yellow-500 cursor-pointer disabled:opacity-50"
         disabled={saving}
       />
       {value !== "" && (
